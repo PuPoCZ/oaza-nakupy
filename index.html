@@ -70,6 +70,11 @@ main { max-width: 1240px; margin: 0 auto; padding: 18px 20px 60px; }
 .hero .big { font-size: 30px; font-weight: 700; letter-spacing: -.01em; line-height: 1.1; }
 .hero .of { color: var(--muted); margin-top: 2px; }
 .hero .pct { font-size: 30px; font-weight: 700; color: var(--accent); line-height: 1.1; }
+.split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.split > div { background: var(--bg); border-radius: 8px; padding: 9px 12px; display: flex; flex-direction: column; }
+.split span { font-size: 12px; color: var(--muted); }
+.split b { font-size: 18px; font-weight: 700; }
+.split small { font-size: 11.5px; color: var(--muted); }
 .bar { position: relative; display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--line-soft); margin: 14px 0 6px; }
 .bar span { height: 100%; }
 .bar .fak { background: var(--fak); } .bar .zap { background: var(--zap); } .bar .obj { background: var(--obj); }
@@ -313,6 +318,7 @@ const ROOT = 'oaza_nakupy';
 const LS_KEY = 'oaza-nakupy-klic';
 const LS_DEMO = 'oaza-nakupy-demo';
 const DEFAULT_CFG = { cil: 1200000, kat: ['Společná kancelář', 'Ředitelna', 'Denní místnost PSS', 'Klienti', 'Stavební práce', 'Elektro', 'Ostatní'] };
+const STAVBA = 'Stavební práce';
 const STEPS = [['obj', 'Objednáno'], ['zap', 'Zaplaceno'], ['fak', 'Vyfakturováno']];
 const DOC_TYPES = ['Faktura', 'Zálohová faktura', 'Dobropis', 'Účtenka', 'Jiný doklad'];
 const P_KEYS = ['nazev', 'dodavatel', 'kat', 'obj', 'zap', 'fak', 'pozn', 'pol', 'dok', 'vytv', 'upr'];
@@ -364,9 +370,14 @@ function renderSummary() {
   const scale = Math.max(cil, t.spent + t.plan) || 1, w = v => (Math.max(0, v) / scale * 100).toFixed(3) + '%';
   const pct = cil ? Math.round(t.spent / cil * 100) : 0;
   const rest = cil - t.spent, unplanned = cil - t.spent - t.plan;
+  const sp = t.cats[STAVBA] || { sp: 0, plan: 0 };
   $('#summary').innerHTML = `
     <h2>Útrata k cíli</h2>
     <div class="hero"><div><div class="big num">${kc(t.spent)}</div><div class="of">utraceno z cíle ${kc(cil)}</div></div><div class="pct num">${pct}&nbsp;%</div></div>
+    <div class="split">
+      <div><span>Stavební práce</span><b class="num">${kc(sp.sp)}</b>${sp.plan ? `<small>v plánu dalších ${kc(sp.plan)}</small>` : ''}</div>
+      <div><span>Vybavení a ostatní</span><b class="num">${kc(t.spent - sp.sp)}</b>${t.plan - sp.plan ? `<small>v plánu dalších ${kc(t.plan - sp.plan)}</small>` : ''}</div>
+    </div>
     <div class="bar" role="img" aria-label="Utraceno ${pct} % z cíle">
       <span class="fak" style="width:${w(t.fak)}"></span><span class="zap" style="width:${w(t.zap)}"></span><span class="obj" style="width:${w(t.obj)}"></span><span class="plan" style="width:${w(t.plan)}"></span>
       ${scale > cil && cil ? `<i class="goal" style="left:${w(cil)}"></i>` : ''}
