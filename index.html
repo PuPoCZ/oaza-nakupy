@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nákupy Oáza klidu</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f4f5f4;
+  --surface: #ffffff;
+  --ink: #1d2427;
+  --muted: #5d686d;
+  --line: #d8dddd;
+  --line-soft: #eceff0;
+  --accent: #1f5f73;
+  --accent-soft: #e2eef1;
+  --fak: #1f5f73;
+  --zap: #4f93a8;
+  --obj: #9cc7d4;
+  --plan: #e4e8e9;
+  --warn: #a8660b;
+  --warn-soft: #fbf1e2;
+  --bad: #b3261e;
+  --f-body: "IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15191b; --surface: #1d2326; --ink: #e4e8e9; --muted: #9aa5a9; --line: #333c40; --line-soft: #283034;
+    --accent: #7fc3d6; --accent-soft: #23353b; --fak: #7fc3d6; --zap: #4d8fa3; --obj: #2f5966; --plan: #2a3236;
+    --warn: #e3a646; --warn-soft: #33291a; --bad: #ff8a80; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.4; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 5px 10px; }
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); color: var(--surface); border-color: var(--accent); font-weight: 600; }
+button.ghost { border-color: transparent; background: transparent; color: var(--muted); }
+button.ghost:hover { color: var(--ink); border-color: var(--line); }
+button.danger { color: var(--bad); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+input, select, textarea { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 5px 8px; min-width: 0; }
+textarea { width: 100%; resize: vertical; min-height: 38px; }
+.num { font-variant-numeric: tabular-nums; }
+.r { text-align: right; }
+.muted { color: var(--muted); }
+[hidden] { display: none !important; }
+
+header.top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 20px; background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 10; }
+header.top h1 { font-size: 16px; margin: 0; font-weight: 600; }
+header.top h1 small { font-weight: 400; color: var(--muted); margin-left: 6px; }
+.spacer { flex: 1; }
+.status { font-size: 12px; color: var(--muted); }
+.status.dirty { color: var(--warn); font-weight: 600; }
+.status.err { color: var(--bad); font-weight: 600; }
+
+main { max-width: 1240px; margin: 0 auto; padding: 18px 20px 60px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+.panel h2 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 0 0 12px; }
+
+.hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.hero .big { font-size: 30px; font-weight: 700; letter-spacing: -.01em; line-height: 1.1; }
+.hero .of { color: var(--muted); margin-top: 2px; }
+.hero .pct { font-size: 30px; font-weight: 700; color: var(--accent); line-height: 1.1; }
+.bar { position: relative; display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--line-soft); margin: 14px 0 6px; }
+.bar span { height: 100%; }
+.bar .fak { background: var(--fak); } .bar .zap { background: var(--zap); } .bar .obj { background: var(--obj); }
+.bar .plan { background: repeating-linear-gradient(135deg, var(--plan) 0 5px, transparent 5px 9px); }
+.bar .goal { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
+.bar-scale { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+.legend { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; margin-top: 14px; }
+.legend .lg > div { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line-soft); }
+.legend .lg > div:last-child { border-bottom: 0; }
+@media (max-width: 560px) { .legend .lg:first-child > div:last-child { border-bottom: 1px solid var(--line-soft); } }
+.legend b { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 600; }
+.legend .tot { font-weight: 600; }
+.sw { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+.sw.fak { background: var(--fak); } .sw.zap { background: var(--zap); } .sw.obj { background: var(--obj); }
+.sw.plan { background: repeating-linear-gradient(135deg, var(--muted) 0 2px, transparent 2px 4px); }
+.sw.none { background: transparent; }
+@media (max-width: 560px) { .legend { grid-template-columns: 1fr; } }
+
+table.cats { width: 100%; border-collapse: collapse; }
+table.cats th { font-size: 12px; font-weight: 600; color: var(--muted); text-align: left; padding: 0 8px 6px; border-bottom: 1px solid var(--line); }
+table.cats td { padding: 7px 8px; border-bottom: 1px solid var(--line-soft); }
+table.cats tbody tr { cursor: pointer; }
+table.cats tbody tr:hover td { background: var(--accent-soft); }
+table.cats tr.on td { background: var(--accent-soft); font-weight: 600; }
+table.cats tfoot td { font-weight: 600; border-bottom: 0; border-top: 1px solid var(--line); }
+table.cats th.r, table.cats td.r { text-align: right; }
+
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 22px 0 12px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; background: var(--surface); }
+.seg button { border: 0; border-radius: 0; padding: 5px 12px; border-right: 1px solid var(--line); }
+.seg button:last-child { border-right: 0; }
+.seg button.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.toolbar input[type=search] { width: 260px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 3px 6px 3px 12px; font-weight: 600; font-size: 13px; }
+.chip button { border: 0; background: transparent; color: inherit; padding: 0 6px; }
+
+.group { margin-top: 18px; }
+.group-h { display: flex; align-items: baseline; gap: 10px; padding: 0 4px 8px; }
+.group-h h3 { margin: 0; font-size: 15px; font-weight: 600; }
+.group-h .muted { font-size: 13px; }
+.group-h b { margin-left: auto; font-variant-numeric: tabular-nums; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; border-left: 4px solid var(--line); }
+.card.st-obj { border-left-color: var(--obj); }
+.card.st-zap { border-left-color: var(--zap); }
+.card.st-fak { border-left-color: var(--fak); }
+.card-h { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto 150px; align-items: center; gap: 14px; padding: 11px 16px 11px 10px; cursor: pointer; }
+.card-h .tg { border: 0; background: none; padding: 0; color: var(--muted); font-size: 12px; transition: transform .15s; width: 22px; }
+.card.open .card-h .tg { transform: rotate(90deg); }
+.card-h .name { font-weight: 600; font-size: 15px; overflow-wrap: anywhere; }
+.card-h .sub { color: var(--muted); font-size: 13px; margin-top: 1px; }
+.tag { display: inline-block; font-size: 11.5px; padding: 0 7px; border-radius: 4px; background: var(--line-soft); color: var(--muted); margin: 2px 4px 0 0; }
+.amt { text-align: right; }
+.amt b { font-size: 16px; font-variant-numeric: tabular-nums; }
+.amt small { display: block; color: var(--muted); font-size: 11.5px; }
+.steps { display: flex; gap: 6px; }
+.step { display: inline-flex; flex-direction: column; align-items: flex-start; min-width: 108px; padding: 4px 10px; border-radius: 7px; border: 1px dashed var(--line); background: transparent; color: var(--muted); text-align: left; line-height: 1.25; }
+.step .t { font-size: 13px; }
+.step small { font-size: 11px; min-height: 14px; }
+.step.on { border-style: solid; border-color: transparent; background: var(--accent-soft); color: var(--accent); }
+.step.on .t::before { content: "✓ "; font-weight: 700; }
+.step.on .t { font-weight: 600; }
+.step:hover { border-color: var(--accent); }
+@media (max-width: 980px) {
+  .card-h { grid-template-columns: 22px minmax(0, 1fr) auto; }
+  .card-h .steps { grid-column: 2 / -1; grid-row: 2; }
+  .step { min-width: 0; flex: 1; }
+}
+
+.card-b { border-top: 1px solid var(--line-soft); padding: 14px 18px 18px 36px; }
+.fields { display: grid; grid-template-columns: 2fr 1.3fr 1.3fr; gap: 10px 14px; }
+.fields label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--muted); }
+.fields label > * { color: var(--ink); font-size: 14px; }
+.fields .wide { grid-column: 1 / -1; }
+@media (max-width: 700px) { .fields { grid-template-columns: 1fr; } }
+.sec-h { display: flex; align-items: baseline; gap: 10px; margin: 18px 0 6px; }
+.sec-h h4 { margin: 0; font-size: 13px; font-weight: 600; }
+.sec-h .muted { font-size: 12px; }
+.tw { overflow-x: auto; }
+table.it { width: 100%; border-collapse: collapse; min-width: 880px; }
+table.it th { font-size: 11.5px; font-weight: 600; color: var(--muted); text-align: left; padding: 4px 4px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+table.it td { padding: 3px 4px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+table.it input, table.it select { width: 100%; padding: 4px 6px; border-color: transparent; background: transparent; }
+table.it input:hover, table.it select:hover { border-color: var(--line); }
+table.it input:focus, table.it select:focus { border-color: var(--accent); background: var(--surface); }
+table.it .r input { text-align: right; }
+table.it td.tot { padding-top: 8px; white-space: nowrap; font-variant-numeric: tabular-nums; text-align: right; }
+table.it tfoot td { font-weight: 600; border-bottom: 0; padding-top: 8px; }
+table.it tr.zrus td input, table.it tr.zrus td.tot, table.it tr.zrus td select { text-decoration: line-through; color: var(--muted); }
+table.it .acts { white-space: nowrap; text-align: right; }
+table.it .acts button, table.it .acts a { border: 0; background: none; padding: 4px 5px; color: var(--muted); font-size: 13px; text-decoration: none; }
+table.it .acts button:hover, table.it .acts a:hover { color: var(--accent); }
+table.it .acts button.on { color: var(--warn); font-weight: 600; }
+table.it tr.more td { background: var(--bg); padding: 6px 8px; }
+table.it tr.more .mg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+table.it tr.more input { border-color: var(--line); background: var(--surface); }
+table.it .inote { font-size: 11.5px; color: var(--muted); padding: 0 6px 3px; }
+.add { margin-top: 8px; }
+.diff { margin-top: 6px; font-size: 12.5px; color: var(--warn); }
+.card-f { display: flex; gap: 10px; margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line-soft); }
+
+table.it { table-layout: fixed; }
+table.it .c-kat { width: 156px; } table.it .c-kod { width: 96px; } table.it .c-poc { width: 54px; } table.it .c-jed { width: 82px; }
+table.it .c-cena { width: 80px; } table.it .c-tot { width: 94px; } table.it .c-act { width: 96px; }
+table.it th.c-naz { width: 27%; }
+table.it .acts .lbl { display: none; }
+table.it .c-m { display: none; }
+table.it .c-m::before { content: none; }
+table.docs { min-width: 560px; } table.docs .c-typ { width: 170px; } table.docs .c-dat { width: 150px; } table.docs .c-cas { width: 130px; } table.docs .c-dx { width: 40px; }
+@media (max-width: 700px) {
+  header.top { padding: 8px 12px; gap: 6px 10px; }
+  header.top .status { order: 5; flex-basis: 100%; }
+  .hide-m { display: none; }
+  main { padding: 12px 10px 60px; }
+  .panel { padding: 14px; }
+  .hero .big, .hero .pct { font-size: 24px; }
+  input, select, textarea { font-size: 16px; }
+  .toolbar { margin-top: 16px; }
+  .toolbar input[type=search] { width: 100%; }
+  .seg { width: 100%; } .seg button { flex: 1; padding: 7px 4px; font-size: 13px; }
+  .card-h { grid-template-columns: 18px minmax(0, 1fr) auto; gap: 8px 10px; padding: 10px 12px 10px 8px; }
+  .card-h .steps { grid-column: 1 / -1; grid-row: 2; }
+  .step { min-width: 0; flex: 1; padding: 6px 8px; }
+  .step .t { font-size: 12.5px; }
+  .card-b { padding: 12px; }
+  .tw { overflow: visible; }
+  table.it, table.it tbody, table.it tr, table.it td { display: block; }
+  table.it, table.docs { min-width: 0; }
+  table.it thead, table.it tfoot { display: none; }
+  table.it tr { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px 8px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  table.it td { border: 0; padding: 0; width: auto !important; }
+  table.it td[data-l]::before { content: attr(data-l); display: block; font-size: 11px; color: var(--muted); margin: 0 0 2px 2px; }
+  table.it input, table.it select { border-color: var(--line); background: var(--surface); }
+  table.it .c-kat, table.it .c-naz, table.it .c-prov { grid-column: 1 / -1; }
+  table.it td.tot { padding-top: 0; text-align: left; font-weight: 600; align-self: end; padding-bottom: 7px; }
+  table.it .c-act { grid-column: 1 / -1; text-align: left; display: flex; gap: 6px; }
+  table.it .acts button, table.it .acts a { border: 1px solid var(--line); border-radius: 6px; padding: 6px 14px; }
+  table.it.items tr:not(.edit):not(.more) > td:not(.c-m) { display: none; }
+  table.it.items tr:not(.edit) { display: block; padding: 0; }
+  table.it .c-m { display: block; grid-column: 1 / -1; padding: 10px 2px; cursor: pointer; }
+  table.it tr.edit .c-m { border-bottom: 1px dashed var(--line); padding-bottom: 8px; }
+  .m-line { display: flex; gap: 10px; align-items: baseline; }
+  .m-name { font-weight: 500; flex: 1; min-width: 0; }
+  .m-tot { font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .m-sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  table.it tr.zrus .m-name, table.it tr.zrus .m-sub { text-decoration: line-through; color: var(--muted); }
+  table.it tr.zrus .m-tot { color: var(--warn); font-size: 12px; }
+  table.cats .c-all { display: none; }
+  table.it .acts .ico { display: none; } table.it .acts .lbl { display: inline; }
+  .step .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; font-size: 12px; }
+  .step.on .t::before { content: "✓"; margin-right: 3px; }
+  .step { padding: 6px 7px; }
+  table.it tr.more { display: block; padding: 0 0 10px; }
+  table.it tr.more td { padding: 8px; }
+  table.it tr.more .mg { grid-template-columns: 1fr; }
+  table.docs .c-typ { grid-column: 1 / 3; } table.docs .c-dat { grid-column: 3; }
+  table.docs .c-cis { grid-column: 1 / -1; } table.docs .c-cas { grid-column: 1 / 3; } table.docs .c-dx { grid-column: 3; align-self: end; }
+  .card-f { flex-wrap: wrap; }
+  .pop { width: min(300px, calc(100vw - 16px)); }
+}
+.empty { padding: 30px; text-align: center; color: var(--muted); }
+.pop { position: absolute; z-index: 30; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 28px rgba(0,0,0,.14); padding: 12px; width: 240px; display: flex; flex-direction: column; gap: 8px; }
+.pop .t { font-weight: 600; }
+.pop .row { display: flex; gap: 6px; }
+.pop .row > * { flex: 1; }
+dialog { border: 1px solid var(--line); border-radius: 12px; padding: 0; width: min(560px, 94vw); background: var(--surface); color: var(--ink); }
+dialog::backdrop { background: rgba(0,0,0,.35); }
+dialog .dh { display: flex; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+dialog .dh h2 { margin: 0; font-size: 16px; }
+dialog .db { padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; }
+dialog label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+dialog label > * { font-size: 14px; color: var(--ink); }
+dialog .row { display: flex; gap: 8px; flex-wrap: wrap; }
+dialog .hint { font-size: 12px; color: var(--muted); }
+.gate { max-width: 440px; margin: 12vh auto; }
+.gate h2 { text-transform: none; letter-spacing: 0; font-size: 18px; color: var(--ink); }
+.gate .row { display: flex; gap: 8px; margin-top: 12px; }
+.gate input { flex: 1; }
+.toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--surface); padding: 8px 14px; border-radius: 8px; font-size: 13px; z-index: 50; }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Nákupy <small>Oáza klidu</small></h1>
+  <span class="spacer"></span>
+  <span id="status" class="status"></span>
+  <button id="b-csv" type="button" class="hide-m">Export CSV</button>
+  <button id="b-set" type="button">Nastavení</button>
+  <button id="b-new" type="button" class="primary">Nový nákup</button>
+</header>
+<main id="main">
+  <div class="grid2">
+    <section class="panel" id="summary"></section>
+    <section class="panel" id="cats"></section>
+  </div>
+  <div class="toolbar">
+    <div class="seg" id="f-stav">
+      <button type="button" data-v="" class="on">Vše</button>
+      <button type="button" data-v="run">Rozpracované</button>
+      <button type="button" data-v="plan">V plánu</button>
+      <button type="button" data-v="fak">Hotové</button>
+    </div>
+    <input type="search" id="f-q" placeholder="Hledat nákup, dodavatele nebo položku">
+    <span id="f-kat"></span>
+  </div>
+  <div id="list"></div>
+</main>
+<div id="gate" hidden>
+  <section class="panel gate">
+    <h2>Nákupy Oáza klidu</h2>
+    <p id="gate-msg">Pro přístup potřebujete odkaz s klíčem. Požádejte o něj Jaroslava Pokorného, nebo klíč vložte sem.</p>
+    <form class="row" id="gate-form"><input id="gate-key" placeholder="Klíč" autocomplete="off"><button class="primary">Otevřít</button></form>
+  </section>
+</div>
+<div id="pop" class="pop" hidden></div>
+<dialog id="dlg">
+  <div class="dh"><h2>Nastavení</h2><span class="spacer"></span><button type="button" class="ghost" data-close>Zavřít</button></div>
+  <div class="db">
+    <label>Cíl útraty do konce roku (Kč)<input id="s-cil" inputmode="numeric"></label>
+    <label>Kategorie (jedna na řádek)<textarea id="s-kat" rows="7"></textarea></label>
+    <div class="row"><button type="button" class="primary" id="s-save">Uložit nastavení</button><button type="button" id="s-csv">Export CSV</button></div>
+    <div id="s-share">
+      <label>Odkaz pro kolegy<input id="s-link" readonly></label>
+      <div class="row" style="margin-top:6px"><button type="button" id="s-copy">Zkopírovat odkaz</button></div>
+      <p class="hint">Kdo má odkaz, může nákupy prohlížet i upravovat.</p>
+    </div>
+    <div>
+      <div class="row">
+        <button type="button" id="s-backup">Stáhnout zálohu (JSON)</button>
+        <button type="button" id="s-import">Nahrát ze zálohy</button>
+        <input type="file" id="s-file" accept="application/json,.json" hidden>
+      </div>
+      <p class="hint">Nahrání ze zálohy přepíše nákupy se stejným ID, ostatní nechá.</p>
+    </div>
+  </div>
+</dialog>
+
+<script type="module">
+const FIREBASE = {"apiKey": "AIzaSyDowhduH6_0zkbfVn_VDKVS3Ztz6XJqjto", "authDomain": "oaza-luzka.firebaseapp.com", "projectId": "oaza-luzka", "storageBucket": "oaza-luzka.firebasestorage.app", "messagingSenderId": "780576871450", "appId": "1:780576871450:web:d68c472bb326e29889ada3"};
+const ROOT = 'oaza_nakupy';
+const LS_KEY = 'oaza-nakupy-klic';
+const LS_DEMO = 'oaza-nakupy-demo';
+const DEFAULT_CFG = { cil: 1200000, kat: ['Společná kancelář', 'Ředitelna', 'Denní místnost PSS', 'Klienti', 'Stavební práce', 'Elektro', 'Ostatní'] };
+const STEPS = [['obj', 'Objednáno'], ['zap', 'Zaplaceno'], ['fak', 'Vyfakturováno']];
+const DOC_TYPES = ['Faktura', 'Zálohová faktura', 'Dobropis', 'Účtenka', 'Jiný doklad'];
+const P_KEYS = ['nazev', 'dodavatel', 'kat', 'obj', 'zap', 'fak', 'pozn', 'pol', 'dok', 'vytv', 'upr'];
+
+const S = { cfg: { ...DEFAULT_CFG }, nak: {}, open: new Set(), more: new Set(), edit: new Set(), fresh: new Set(), f: { stav: '', kat: '', q: '' }, ready: false };
+let api = null;
+const $ = (sel, el = document) => el.querySelector(sel);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const plural = (n, a, b, c) => `${n} ${n === 1 ? a : n >= 2 && n <= 4 ? b : c}`;
+const nf = new Intl.NumberFormat('cs-CZ', { maximumFractionDigits: 0 });
+const kc = n => nf.format(Math.round(n || 0)) + ' Kč';
+const num = v => { const n = parseFloat(String(v ?? '').replace(/[\s ]/g, '').replace(',', '.')); return Number.isFinite(n) ? n : 0; };
+const rid = () => Math.random().toString(36).slice(2, 12);
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const dcz = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? `${+m[3]}. ${+m[2]}. ${m[1]}` : ''; };
+const dshort = s => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? `${+m[3]}. ${+m[2]}.` : ''; };
+const stable = o => JSON.stringify(o, (k, v) => (v && typeof v === 'object' && !Array.isArray(v)) ? Object.keys(v).sort().reduce((a, x) => (a[x] = v[x], a), {}) : v);
+
+// ---------- výpočty ----------
+const itemTotal = i => i.zrus ? 0 : num(i.pocet) * num(i.cena);
+const itemsSum = p => (p.pol || []).reduce((a, i) => a + itemTotal(i), 0);
+const docsSum = p => (p.dok || []).reduce((a, d) => a + num(d.castka), 0);
+const amount = p => (p.dok && p.dok.length) ? docsSum(p) : itemsSum(p);
+const stateOf = p => p.fak ? 'fak' : p.zap ? 'zap' : p.obj ? 'obj' : 'plan';
+const lastDate = p => [p.fak, p.zap, p.obj].filter(x => x && x.length === 10).sort().pop() || '';
+function catShares(p) {
+  const tot = itemsSum(p), a = amount(p), out = {};
+  if (tot > 0) for (const i of p.pol || []) { const v = itemTotal(i); if (v) { const k = i.kat || p.kat || 'Bez kategorie'; out[k] = (out[k] || 0) + v / tot * a; } }
+  else if (a) out[p.kat || 'Bez kategorie'] = a;
+  return out;
+}
+const pCats = p => { const s = new Set(); if (p.kat) s.add(p.kat); for (const i of p.pol || []) if (i.kat && !i.zrus) s.add(i.kat); return [...s]; };
+function totals() {
+  const t = { fak: 0, zap: 0, obj: 0, plan: 0, cats: {} };
+  for (const p of Object.values(S.nak)) {
+    const st = stateOf(p); t[st] += amount(p);
+    for (const [k, v] of Object.entries(catShares(p))) {
+      const c = t.cats[k] || (t.cats[k] = { sp: 0, plan: 0 });
+      if (st === 'plan') c.plan += v; else c.sp += v;
+    }
+  }
+  t.spent = t.fak + t.zap + t.obj;
+  return t;
+}
+
+// ---------- vykreslení ----------
+function renderSummary() {
+  const t = totals(), cil = num(S.cfg.cil);
+  const scale = Math.max(cil, t.spent + t.plan) || 1, w = v => (Math.max(0, v) / scale * 100).toFixed(3) + '%';
+  const pct = cil ? Math.round(t.spent / cil * 100) : 0;
+  const rest = cil - t.spent, unplanned = cil - t.spent - t.plan;
+  $('#summary').innerHTML = `
+    <h2>Útrata k cíli</h2>
+    <div class="hero"><div><div class="big num">${kc(t.spent)}</div><div class="of">utraceno z cíle ${kc(cil)}</div></div><div class="pct num">${pct}&nbsp;%</div></div>
+    <div class="bar" role="img" aria-label="Utraceno ${pct} % z cíle">
+      <span class="fak" style="width:${w(t.fak)}"></span><span class="zap" style="width:${w(t.zap)}"></span><span class="obj" style="width:${w(t.obj)}"></span><span class="plan" style="width:${w(t.plan)}"></span>
+      ${scale > cil && cil ? `<i class="goal" style="left:${w(cil)}"></i>` : ''}
+    </div>
+    <div class="bar-scale num"><span>0</span><span>${kc(scale)}</span></div>
+    <div class="legend"><div class="lg">
+      <div><i class="sw fak"></i>Vyfakturováno<b>${kc(t.fak)}</b></div>
+      <div><i class="sw zap"></i>Zaplaceno, chybí faktura<b>${kc(t.zap)}</b></div>
+      <div><i class="sw obj"></i>Objednáno, nezaplaceno<b>${kc(t.obj)}</b></div>
+    </div><div class="lg">
+      <div class="tot">Zbývá utratit<b>${kc(rest)}</b></div>
+      <div><i class="sw plan"></i>V plánu<b>${kc(t.plan)}</b></div>
+      <div>${unplanned >= 0 ? 'Ještě nenaplánováno' : 'Plán přesahuje cíl o'}<b>${kc(Math.abs(unplanned))}</b></div>
+    </div></div>`;
+  renderCats(t);
+}
+function renderCats(t) {
+  const names = [...S.cfg.kat]; for (const k of Object.keys(t.cats)) if (!names.includes(k)) names.push(k);
+  let sp = 0, pl = 0;
+  const rows = names.map(k => { const c = t.cats[k] || { sp: 0, plan: 0 }; sp += c.sp; pl += c.plan;
+    return `<tr data-kat="${esc(k)}" class="${S.f.kat === k ? 'on' : ''}"><td>${esc(k)}</td><td class="r num">${kc(c.sp)}</td><td class="r num">${kc(c.plan)}</td><td class="r num c-all">${kc(c.sp + c.plan)}</td></tr>`; }).join('');
+  $('#cats').innerHTML = `<h2>Podle kategorií</h2><table class="cats"><thead><tr><th>Kategorie</th><th class="r">Utraceno</th><th class="r">V plánu</th><th class="r c-all">Celkem</th></tr></thead>
+    <tbody>${rows}</tbody><tfoot><tr><td>Celkem</td><td class="r num">${kc(sp)}</td><td class="r num">${kc(pl)}</td><td class="r num c-all">${kc(sp + pl)}</td></tr></tfoot></table>`;
+}
+const GROUPS = [
+  ['run', 'Rozpracované', 'objednáno nebo zaplaceno, chybí faktura', p => ['obj', 'zap'].includes(stateOf(p))],
+  ['plan', 'V plánu', 'zatím neobjednáno', p => stateOf(p) === 'plan'],
+  ['fak', 'Hotové', 'vyfakturováno', p => stateOf(p) === 'fak'],
+];
+function matches(p) {
+  if (S.f.kat && !pCats(p).includes(S.f.kat)) return false;
+  const q = S.f.q.trim().toLowerCase();
+  if (q) { const hay = [p.nazev, p.dodavatel, p.pozn, ...(p.pol || []).flatMap(i => [i.nazev, i.kod, i.prov]), ...(p.dok || []).map(d => d.cislo)].join(' ').toLowerCase(); if (!hay.includes(q)) return false; }
+  return true;
+}
+function renderList() {
+  closePop();
+  $('#f-kat').innerHTML = S.f.kat ? `<span class="chip">${esc(S.f.kat)}<button type="button" data-clear-kat aria-label="Zrušit filtr kategorie">×</button></span>` : '';
+  const all = Object.values(S.nak).filter(matches);
+  let html = '';
+  for (const [key, title, hint, test] of GROUPS) {
+    if (S.f.stav && S.f.stav !== key) continue;
+    const ps = all.filter(test).sort((a, b) => (S.fresh.has(b.id) - S.fresh.has(a.id)) || (key === 'plan' ? amount(b) - amount(a) : (lastDate(b).localeCompare(lastDate(a)) || amount(b) - amount(a))));
+    if (!ps.length) continue;
+    const sum = ps.reduce((a, p) => a + (S.f.kat ? (catShares(p)[S.f.kat] || 0) : amount(p)), 0);
+    html += `<section class="group"><div class="group-h"><h3>${title}</h3><span class="muted">${plural(ps.length, 'nákup', 'nákupy', 'nákupů')}, ${hint}</span><b>${kc(sum)}</b></div>${ps.map(cardHtml).join('')}</section>`;
+  }
+  $('#list').innerHTML = html || `<div class="panel empty">${Object.keys(S.nak).length ? 'Filtru neodpovídá žádný nákup.' : 'Zatím tu nejsou žádné nákupy. Založte první tlačítkem Nový nákup.'}</div>`;
+}
+function stepsHtml(p) {
+  return STEPS.map(([k, l]) => `<button type="button" class="step${p[k] ? ' on' : ''}" data-step="${k}" aria-pressed="${!!p[k]}"><span class="t">${l}</span><small>${p[k] ? dcz(p[k]) : ''}</small></button>`).join('');
+}
+function amtHtml(p) {
+  const share = S.f.kat ? catShares(p)[S.f.kat] : null;
+  const src = (p.dok && p.dok.length) ? 'podle dokladů' : 'podle položek';
+  return `<b>${kc(amount(p))}</b><small>${share != null && pCats(p).length > 1 ? 'z toho ' + esc(S.f.kat) + ' ' + kc(share) : src}</small>`;
+}
+function headHtml(p) {
+  const cats = pCats(p).map(c => `<span class="tag">${esc(c)}</span>`).join('');
+  return `<button type="button" class="tg" aria-expanded="${S.open.has(p.id)}" aria-label="Rozbalit">▶</button>
+    <div><div class="name">${esc(p.nazev || 'Bez názvu')}</div><div class="sub">${esc(p.dodavatel || '')}${p.dodavatel && cats ? ' · ' : ''}${cats}</div></div>
+    <div class="steps">${stepsHtml(p)}</div><div class="amt num">${amtHtml(p)}</div>`;
+}
+function cardHtml(p) {
+  const open = S.open.has(p.id);
+  return `<article class="card st-${stateOf(p)}${open ? ' open' : ''}" data-id="${p.id}"><div class="card-h">${headHtml(p)}</div>${open ? `<div class="card-b">${bodyHtml(p)}</div>` : ''}</article>`;
+}
+const katOpts = (sel, allowEmpty) => { const list = [...S.cfg.kat]; if (sel && !list.includes(sel)) list.push(sel);
+  return (allowEmpty ? `<option value="">Bez kategorie</option>` : '') + list.map(k => `<option${k === sel ? ' selected' : ''}>${esc(k)}</option>`).join(''); };
+function itemRow(p, i) {
+  const more = S.more.has(i.id) || S.edit.has(i.id);
+  return `<tr data-item="${i.id}" class="${i.zrus ? 'zrus' : ''}${S.edit.has(i.id) ? ' edit' : ''}">
+    <td class="c-m" data-act="medit">${mSum(p, i)}</td>
+    <td class="c-kat" data-l="Kategorie"><select data-k="kat" aria-label="Kategorie">${katOpts(i.kat, true)}</select></td>
+    <td class="c-naz" data-l="Výrobek"><input data-k="nazev" value="${esc(i.nazev)}" aria-label="Výrobek">${i.pozn && !more ? `<div class="inote">${esc(i.pozn)}</div>` : ''}</td>
+    <td class="c-prov" data-l="Provedení / rozměry"><input data-k="prov" value="${esc(i.prov)}" aria-label="Provedení"></td>
+    <td class="c-kod" data-l="Kód"><input data-k="kod" value="${esc(i.kod)}" aria-label="Kód"></td>
+    <td class="r c-poc" data-l="Počet"><input data-k="pocet" value="${esc(i.pocet)}" inputmode="decimal" aria-label="Počet"></td>
+    <td class="c-jed" data-l="Jednotka"><input data-k="jed" value="${esc(i.jed)}" aria-label="Jednotka"></td>
+    <td class="r c-cena" data-l="Cena / j."><input data-k="cena" value="${esc(i.cena)}" inputmode="decimal" aria-label="Cena za jednotku"></td>
+    <td class="tot c-tot" data-l="Celkem" data-tot>${kc(num(i.pocet) * num(i.cena))}</td>
+    <td class="acts c-act">${i.odkaz ? `<a href="${esc(i.odkaz)}" target="_blank" rel="noopener" title="Otevřít odkaz">↗</a>` : ''}<button type="button" data-act="more" class="hide-m" title="Odkaz a poznámka">⋯</button><button type="button" data-act="zrus" class="${i.zrus ? 'on' : ''}" title="${i.zrus ? 'Vrátit položku' : 'Zrušeno, vráceno, nekupuje se'}"><span class="ico">${i.zrus ? 'zrušeno' : '⊘'}</span><span class="lbl">${i.zrus ? 'Vrátit položku' : 'Zrušit položku'}</span></button><button type="button" data-act="del-item" title="Smazat položku"><span class="ico">×</span><span class="lbl">Smazat</span></button></td>
+  </tr>${more ? `<tr class="more" data-item="${i.id}"><td colspan="10"><div class="mg"><input data-k="odkaz" value="${esc(i.odkaz)}" placeholder="Odkaz na produkt"><input data-k="pozn" value="${esc(i.pozn)}" placeholder="Poznámka k položce"></div></td></tr>` : ''}`;
+}
+function mSum(p, i) {
+  return `<div class="m-line"><span class="m-name">${esc(i.nazev || 'Nová položka')}</span><span class="m-tot">${i.zrus ? 'zrušeno' : kc(itemTotal(i))}</span></div>
+    <div class="m-sub">${esc(i.kat || p.kat || 'Bez kategorie')} · ${esc(String(i.pocet ?? ''))} ${esc(i.jed || '')} × ${kc(i.cena)}${i.prov ? ' · ' + esc(i.prov) : ''}</div>`;
+}
+function docRow(d) {
+  return `<tr data-doc="${d.id}">
+    <td class="c-typ" data-l="Typ"><select data-k="typ">${DOC_TYPES.map(t => `<option${t === d.typ ? ' selected' : ''}>${t}</option>`).join('')}</select></td>
+    <td class="c-cis" data-l="Číslo"><input data-k="cislo" value="${esc(d.cislo)}" aria-label="Číslo dokladu"></td>
+    <td class="c-dat" data-l="Datum"><input type="date" data-k="datum" value="${esc(d.datum)}" aria-label="Datum"></td>
+    <td class="r c-cas" data-l="Částka vč. DPH"><input data-k="castka" value="${esc(d.castka)}" inputmode="decimal" aria-label="Částka vč. DPH"></td>
+    <td class="acts c-dx"><button type="button" data-act="del-doc" title="Smazat doklad">×</button></td></tr>`;
+}
+function diffHtml(p) {
+  if (!(p.dok && p.dok.length) || !itemsSum(p)) return '';
+  const d = docsSum(p) - itemsSum(p);
+  return Math.abs(d) >= 1 ? `Doklady se od položek liší o ${kc(d)}.` : '';
+}
+function bodyHtml(p) {
+  const pol = p.pol || [], dok = p.dok || [];
+  return `<div class="fields">
+      <label>Název nákupu<input data-f="nazev" value="${esc(p.nazev)}"></label>
+      <label>Dodavatel<input data-f="dodavatel" value="${esc(p.dodavatel)}"></label>
+      <label>Hlavní kategorie<select data-f="kat">${katOpts(p.kat, true)}</select></label>
+      <label class="wide">Poznámka<textarea data-f="pozn" rows="2">${esc(p.pozn)}</textarea></label>
+    </div>
+    <div class="sec-h"><h4>Položky</h4><span class="muted" data-isum>${plural(pol.length, 'položka', 'položky', 'položek')}, součet ${kc(itemsSum(p))}</span></div>
+    <div class="tw"><table class="it items"><thead><tr><th class="c-m"></th><th class="c-kat">Kategorie</th><th class="c-naz">Výrobek</th><th>Provedení / rozměry</th><th class="c-kod">Kód</th><th class="r c-poc">Počet</th><th class="c-jed">Jednotka</th><th class="r c-cena">Cena / j.</th><th class="r c-tot">Celkem</th><th class="c-act"></th></tr></thead>
+      <tbody>${pol.map(i => itemRow(p, i)).join('')}</tbody></table></div>
+    <button type="button" class="add" data-act="add-item">Přidat položku</button>
+    <div class="sec-h"><h4>Doklady</h4><span class="muted" data-dsum>${dok.length ? 'součet ' + kc(docsSum(p)) : 'dokud tu není doklad, počítá se částka z položek'}</span></div>
+    ${dok.length ? `<div class="tw"><table class="it docs"><thead><tr><th class="c-typ">Typ</th><th>Číslo</th><th class="c-dat">Datum</th><th class="r c-cas">Částka vč. DPH</th><th class="c-dx"></th></tr></thead><tbody>${dok.map(docRow).join('')}</tbody></table></div>` : ''}
+    <div class="diff" data-diff>${diffHtml(p)}</div>
+    <button type="button" class="add" data-act="add-doc">Přidat doklad</button>
+    <div class="card-f"><span class="muted" style="font-size:12px">Založeno ${dcz((p.vytv || '').slice(0, 10))}${p.upr ? ', upraveno ' + dcz(p.upr.slice(0, 10)) : ''}</span><span class="spacer"></span><button type="button" class="danger" data-act="del-p">Smazat nákup</button></div>`;
+}
+function render() { if (!S.ready) return; renderSummary(); renderList(); }
+function refreshCard(id) {
+  const el = document.querySelector(`.card[data-id="${id}"]`), p = S.nak[id]; if (!el || !p) return render();
+  el.className = `card st-${stateOf(p)}${S.open.has(id) ? ' open' : ''}`;
+  $('.card-h', el).innerHTML = headHtml(p);
+  const isum = $('[data-isum]', el); if (isum) isum.textContent = `${plural((p.pol || []).length, 'položka', 'položky', 'položek')}, součet ${kc(itemsSum(p))}`;
+  const dsum = $('[data-dsum]', el); if (dsum && (p.dok || []).length) dsum.textContent = 'součet ' + kc(docsSum(p));
+  const df = $('[data-diff]', el); if (df) df.textContent = diffHtml(p);
+  renderSummary();
+}
+function rebuildCard(id) {
+  const el = document.querySelector(`.card[data-id="${id}"]`), p = S.nak[id];
+  if (!el || !p) return render();
+  el.outerHTML = cardHtml(p); renderSummary();
+}
+
+// ---------- ukládání ----------
+const timers = {}; let pending = 0, failed = false;
+function setStatus() {
+  const el = $('#status');
+  if (failed) { el.textContent = 'Chyba ukládání, zkuste stránku obnovit'; el.className = 'status err'; return; }
+  if (!navigator.onLine) { el.textContent = 'Offline, uloží se po připojení'; el.className = 'status dirty'; return; }
+  const busy = pending > 0 || Object.keys(timers).length > 0;
+  el.textContent = api && api.local ? 'Zkušební režim, data jen v tomto prohlížeči' : busy ? 'Ukládám…' : 'Uloženo';
+  el.className = 'status' + (busy ? ' dirty' : '');
+}
+function clean(p) { const o = {}; for (const k of P_KEYS) o[k] = p[k] ?? (k === 'pol' || k === 'dok' ? [] : ''); return o; }
+function queueSave(id, now) {
+  const p = S.nak[id]; if (!p) return;
+  p.upr = new Date().toISOString().slice(0, 19);
+  clearTimeout(timers[id]);
+  const run = () => { delete timers[id]; pending++; setStatus();
+    Promise.resolve(api.savePurchase(id, clean(S.nak[id]))).catch(e => { console.error(e); failed = true; }).finally(() => { pending--; setStatus(); }); };
+  if (now) run(); else { timers[id] = setTimeout(run, 700); setStatus(); }
+}
+window.addEventListener('beforeunload', e => { if (Object.keys(timers).length) { for (const id of Object.keys(timers)) { clearTimeout(timers[id]); delete timers[id]; api.savePurchase(id, clean(S.nak[id])); } } });
+window.addEventListener('online', setStatus); window.addEventListener('offline', setStatus);
+
+let deferred = false;
+function remoteChanged() {
+  const a = document.activeElement;
+  if (a && $('#list').contains(a) && a.matches('input, select, textarea')) { deferred = true; renderSummary(); return; }
+  render();
+}
+document.addEventListener('focusout', () => setTimeout(() => {
+  if (!deferred) return; const a = document.activeElement;
+  if (!(a && $('#list').contains(a) && a.matches('input, select, textarea'))) { deferred = false; render(); }
+}, 0));
+function onRemote(docs) {
+  let changed = false; const seen = new Set();
+  for (const [id, data] of docs) {
+    seen.add(id); if (timers[id]) continue;
+    const next = { id, ...data };
+    if (!S.nak[id] || stable(S.nak[id]) !== stable(next)) { S.nak[id] = next; changed = true; }
+  }
+  for (const id of Object.keys(S.nak)) if (!seen.has(id) && !timers[id]) { delete S.nak[id]; changed = true; }
+  if (!S.ready) { S.ready = true; render(); return; }
+  if (changed) remoteChanged();
+}
+function onConfig(c) {
+  if (!c) return;
+  const next = { cil: num(c.cil) || DEFAULT_CFG.cil, kat: Array.isArray(c.kat) && c.kat.length ? c.kat : DEFAULT_CFG.kat };
+  if (stable(next) !== stable(S.cfg)) { S.cfg = next; if (S.ready) remoteChanged(); }
+}
+
+async function connectFirebase(key) {
+  const [{ initializeApp }, F] = await Promise.all([
+    import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js'),
+    import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js')]);
+  const app = initializeApp(FIREBASE, 'nakupy');
+  let db; try { db = F.initializeFirestore(app, { localCache: F.persistentLocalCache({ tabManager: F.persistentMultipleTabManager() }) }); } catch (e) { db = F.getFirestore(app); }
+  const cfgRef = F.doc(db, ROOT, key), col = F.collection(db, ROOT, key, 'nakupy');
+  const denied = e => { console.error(e); if (e && e.code === 'permission-denied') { localStorage.removeItem(LS_KEY); showGate('Klíč neplatí. Zkontrolujte odkaz, nebo klíč vložte znovu.'); } else { failed = true; setStatus(); } };
+  F.onSnapshot(cfgRef, s => { if (s.exists()) onConfig(s.data()); else if (!s.metadata.fromCache) F.setDoc(cfgRef, { ...DEFAULT_CFG }).catch(denied); }, denied);
+  F.onSnapshot(col, s => onRemote(s.docs.map(d => [d.id, d.data()])), denied);
+  api = {
+    savePurchase: (id, data) => F.setDoc(F.doc(col, id), data),
+    deletePurchase: id => F.deleteDoc(F.doc(col, id)),
+    saveConfig: c => F.setDoc(cfgRef, c),
+  };
+}
+function connectLocal() {
+  const load = () => { try { return JSON.parse(localStorage.getItem(LS_DEMO)) || {}; } catch (e) { return {}; } };
+  const db = load(); db.config = db.config || { ...DEFAULT_CFG }; db.nakupy = db.nakupy || {};
+  const persist = () => { try { localStorage.setItem(LS_DEMO, JSON.stringify(db)); } catch (e) {} };
+  api = {
+    local: true,
+    savePurchase: (id, data) => { db.nakupy[id] = data; persist(); },
+    deletePurchase: id => { delete db.nakupy[id]; persist(); },
+    saveConfig: c => { db.config = c; persist(); onConfig(c); },
+  };
+  onConfig(db.config); onRemote(Object.entries(db.nakupy));
+}
+
+// ---------- přístup ----------
+function showGate(msg) {
+  $('#main').hidden = true; document.querySelectorAll('header.top button').forEach(b => b.hidden = true);
+  $('#gate').hidden = false; if (msg) $('#gate-msg').textContent = msg;
+}
+$('#gate-form').addEventListener('submit', e => { e.preventDefault(); const k = $('#gate-key').value.trim(); if (k) { localStorage.setItem(LS_KEY, k); location.hash = ''; location.reload(); } });
+function start() {
+  const params = new URLSearchParams(location.search);
+  if (params.has('demo')) { connectLocal(); setStatus(); return; }
+  const m = /[#&]k=([^&]+)/.exec(location.hash);
+  if (m) { localStorage.setItem(LS_KEY, decodeURIComponent(m[1])); history.replaceState(null, '', location.pathname + location.search); }
+  const key = localStorage.getItem(LS_KEY);
+  if (!key) return showGate();
+  connectFirebase(key).then(setStatus).catch(e => { console.error(e); $('#status').textContent = 'Nepodařilo se připojit k databázi'; $('#status').className = 'status err'; });
+}
+
+// ---------- interakce ----------
+const pOf = el => S.nak[el.closest('.card')?.dataset.id];
+function setField(el) {
+  const card = el.closest('.card'); if (!card) return; const p = S.nak[card.dataset.id]; if (!p) return;
+  if (el.dataset.f) { p[el.dataset.f] = el.value; refreshCard(p.id); }
+  else if (el.closest('[data-item]')) {
+    const it = p.pol.find(x => x.id === el.closest('[data-item]').dataset.item); if (!it) return;
+    const k = el.dataset.k; it[k] = ['pocet', 'cena'].includes(k) ? (el.value.trim() === '' ? 0 : num(el.value)) : el.value;
+    const tr = card.querySelector(`tr[data-item="${it.id}"]:not(.more)`);
+    if (tr) { $('[data-tot]', tr).textContent = kc(num(it.pocet) * num(it.cena)); $('.c-m', tr).innerHTML = mSum(p, it); }
+    refreshCard(p.id);
+  } else if (el.closest('[data-doc]')) {
+    const d = p.dok.find(x => x.id === el.closest('[data-doc]').dataset.doc); if (!d) return;
+    const k = el.dataset.k; d[k] = k === 'castka' ? (el.value.trim() === '' ? 0 : num(el.value)) : el.value;
+    refreshCard(p.id);
+  } else return;
+  queueSave(p.id);
+}
+$('#list').addEventListener('input', e => { if (e.target.matches('input, textarea')) setField(e.target); });
+$('#list').addEventListener('change', e => { if (e.target.matches('select, input[type=date]')) setField(e.target); });
+$('#list').addEventListener('click', e => {
+  const t = e.target;
+  if (t.closest('[data-clear-kat]')) return;
+  const step = t.closest('[data-step]');
+  if (step) { e.stopPropagation(); const p = pOf(step), k = step.dataset.step;
+    if (!p[k]) { p[k] = today(); queueSave(p.id, true); afterStep(p.id); } else openPop(step, p, k); return; }
+  const act = t.closest('[data-act]');
+  if (act) { const p = pOf(act); if (!p) return; const a = act.dataset.act;
+    if (a === 'add-item') { const it = { id: rid(), kat: p.kat || '', nazev: '', prov: '', kod: '', pocet: 1, jed: 'ks', cena: 0, odkaz: '', pozn: '', zrus: false }; p.pol = [...(p.pol || []), it]; S.edit.add(it.id); queueSave(p.id, true); rebuildCard(p.id); focusIn(p.id, `tr[data-item="${it.id}"] [data-k="nazev"]`); }
+    if (a === 'add-doc') { const d = { id: rid(), typ: 'Faktura', cislo: '', datum: today(), castka: (p.dok || []).length ? 0 : Math.round(itemsSum(p)) }; p.dok = [...(p.dok || []), d]; queueSave(p.id, true); rebuildCard(p.id); focusIn(p.id, `tr[data-doc="${d.id}"] [data-k="cislo"]`); }
+    if (a === 'del-item') { const id = act.closest('[data-item]').dataset.item; p.pol = p.pol.filter(x => x.id !== id); queueSave(p.id, true); rebuildCard(p.id); }
+    if (a === 'del-doc') { const id = act.closest('[data-doc]').dataset.doc; p.dok = p.dok.filter(x => x.id !== id); queueSave(p.id, true); rebuildCard(p.id); }
+    if (a === 'zrus') { const it = p.pol.find(x => x.id === act.closest('[data-item]').dataset.item); it.zrus = !it.zrus; queueSave(p.id, true); rebuildCard(p.id); }
+    if (a === 'medit') { const id = act.closest('[data-item]').dataset.item; S.edit.has(id) ? S.edit.delete(id) : S.edit.add(id); rebuildCard(p.id); return; }
+    if (a === 'more') { const id = act.closest('[data-item]').dataset.item; S.more.has(id) ? S.more.delete(id) : S.more.add(id); rebuildCard(p.id); if (S.more.has(id)) focusIn(p.id, `tr.more[data-item="${id}"] [data-k="odkaz"]`); }
+    if (a === 'del-p') { if (confirm(`Smazat nákup „${p.nazev || 'Bez názvu'}“ i s položkami a doklady?`)) { clearTimeout(timers[p.id]); delete timers[p.id]; delete S.nak[p.id]; S.open.delete(p.id); Promise.resolve(api.deletePurchase(p.id)).catch(() => { failed = true; setStatus(); }); render(); } }
+    return; }
+  const head = t.closest('.card-h');
+  if (head && !t.closest('input, select, textarea, a')) { const id = head.closest('.card').dataset.id; S.open.has(id) ? S.open.delete(id) : S.open.add(id); rebuildCard(id); }
+});
+$('#main').addEventListener('click', e => { if (e.target.closest('[data-clear-kat]')) { S.f.kat = ''; render(); } });
+function focusIn(id, sel) { const el = document.querySelector(`.card[data-id="${id}"] ${sel}`); if (el) { el.focus({ preventScroll: true }); if (el.select) el.select(); } }
+function afterStep(id) { const g = GROUPS.find(x => x[3](S.nak[id])); render(); toast(`${S.nak[id].nazev || 'Nákup'}: ${g[1].toLowerCase()}`); }
+function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2200); }
+
+function closePop() { const p = $('#pop'); p.hidden = true; p.innerHTML = ''; }
+function openPop(btn, p, k) {
+  const pop = $('#pop'), label = STEPS.find(s => s[0] === k)[1];
+  pop.innerHTML = `<div class="t">${label}</div><input type="date" value="${/^\d{4}-/.test(p[k]) ? p[k] : today()}" aria-label="Datum">
+    <div class="row"><button type="button" class="primary" data-p="save">Uložit datum</button><button type="button" data-p="nodate">Bez data</button></div>
+    <button type="button" class="danger" data-p="clear">Zrušit potvrzení</button>`;
+  pop.hidden = false;
+  const r = btn.getBoundingClientRect();
+  pop.style.top = (window.scrollY + r.bottom + 6) + 'px';
+  const pw = pop.offsetWidth || 240;
+  pop.style.left = Math.max(window.scrollX + 8, Math.min(window.scrollX + r.left, window.scrollX + document.documentElement.clientWidth - pw - 8)) + 'px';
+  pop.onclick = e => { const a = e.target.closest('[data-p]')?.dataset.p; if (!a) return;
+    if (a === 'save') p[k] = $('input', pop).value || today();
+    if (a === 'nodate') p[k] = '1';
+    if (a === 'clear') p[k] = '';
+    closePop(); queueSave(p.id, true); afterStep(p.id); };
+  $('input', pop).focus();
+}
+document.addEventListener('click', e => { if (!$('#pop').hidden && !e.target.closest('#pop') && !e.target.closest('[data-step]')) closePop(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePop(); });
+
+$('#cats').addEventListener('click', e => { const tr = e.target.closest('tr[data-kat]'); if (!tr) return; S.f.kat = S.f.kat === tr.dataset.kat ? '' : tr.dataset.kat; render(); });
+$('#f-stav').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.f.stav = b.dataset.v; [...$('#f-stav').children].forEach(x => x.classList.toggle('on', x === b)); renderList(); });
+$('#f-q').addEventListener('input', e => { S.f.q = e.target.value; renderList(); });
+$('#b-new').addEventListener('click', () => {
+  const id = rid(), now = new Date().toISOString().slice(0, 19);
+  S.nak[id] = { id, nazev: '', dodavatel: '', kat: S.f.kat || '', obj: '', zap: '', fak: '', pozn: '', pol: [], dok: [], vytv: now, upr: now };
+  S.open.add(id); S.fresh.add(id); S.f.stav = ''; S.f.q = ''; $('#f-q').value = ''; [...$('#f-stav').children].forEach(x => x.classList.toggle('on', x.dataset.v === ''));
+  queueSave(id, true); render(); document.querySelector(`.card[data-id="${id}"]`)?.scrollIntoView({ block: 'center' }); focusIn(id, '[data-f="nazev"]');
+});
+
+// ---------- export, nastavení ----------
+function download(name, data, type) { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], { type })); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); }
+const STAV = { plan: 'V plánu', obj: 'Objednáno', zap: 'Zaplaceno', fak: 'Vyfakturováno' };
+const exportCsv = () => {
+  const q = v => { const s = String(v ?? ''); return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const n = v => String(Math.round(num(v) * 100) / 100).replace('.', ',');
+  const rows = [['Nákup', 'Dodavatel', 'Stav', 'Objednáno', 'Zaplaceno', 'Vyfakturováno', 'Kategorie', 'Výrobek', 'Provedení', 'Kód', 'Počet', 'Jednotka', 'Cena za jednotku', 'Celkem', 'Zrušeno', 'Odkaz']];
+  for (const p of Object.values(S.nak).sort((a, b) => (a.nazev || '').localeCompare(b.nazev || '', 'cs'))) {
+    const base = [p.nazev, p.dodavatel, STAV[stateOf(p)], dcz(p.obj) || (p.obj ? 'ano' : ''), dcz(p.zap) || (p.zap ? 'ano' : ''), dcz(p.fak) || (p.fak ? 'ano' : '')];
+    for (const i of p.pol || []) rows.push([...base, i.kat || p.kat, i.nazev, i.prov, i.kod, n(i.pocet), i.jed, n(i.cena), n(itemTotal(i)), i.zrus ? 'ano' : '', i.odkaz]);
+    for (const d of p.dok || []) rows.push([...base, p.kat, `${d.typ} ${d.cislo}`.trim(), dcz(d.datum), '', '', '', '', n(d.castka), '', '']);
+  }
+  download(`nakupy-${today()}.csv`, '\ufeff' + rows.map(r => r.map(q).join(';')).join('\r\n'), 'text/csv;charset=utf-8');
+};
+$('#b-csv').addEventListener('click', exportCsv);
+$('#s-csv').addEventListener('click', exportCsv);
+const dlg = $('#dlg');
+$('#b-set').addEventListener('click', () => {
+  $('#s-cil').value = S.cfg.cil; $('#s-kat').value = S.cfg.kat.join('\n');
+  const key = localStorage.getItem(LS_KEY);
+  $('#s-share').hidden = !!(api && api.local) || !key;
+  if (key) $('#s-link').value = location.origin + location.pathname + '#k=' + encodeURIComponent(key);
+  dlg.showModal();
+});
+dlg.addEventListener('click', e => { if (e.target.closest('[data-close]') || e.target === dlg) dlg.close(); });
+$('#s-save').addEventListener('click', () => {
+  const kat = [...new Set($('#s-kat').value.split('\n').map(s => s.trim()).filter(Boolean))];
+  const c = { cil: num($('#s-cil').value) || DEFAULT_CFG.cil, kat: kat.length ? kat : DEFAULT_CFG.kat };
+  S.cfg = c; Promise.resolve(api.saveConfig(c)).catch(() => { failed = true; setStatus(); }); dlg.close(); render(); toast('Nastavení uloženo');
+});
+$('#s-copy').addEventListener('click', async () => { try { await navigator.clipboard.writeText($('#s-link').value); toast('Odkaz zkopírován'); } catch (e) { $('#s-link').select(); } });
+$('#s-backup').addEventListener('click', () => {
+  const nakupy = Object.values(S.nak).map(p => ({ id: p.id, ...clean(p) }));
+  download(`nakupy-zaloha-${today()}.json`, JSON.stringify({ config: S.cfg, nakupy }, null, 1), 'application/json');
+});
+$('#s-import').addEventListener('click', () => $('#s-file').click());
+$('#s-file').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try { importData(JSON.parse(await f.text())); dlg.close(); } catch (err) { alert('Soubor se nepodařilo načíst: ' + err.message); }
+});
+function importData(data) {
+  const list = Array.isArray(data.nakupy) ? data.nakupy : Object.entries(data.nakupy || {}).map(([id, p]) => ({ id, ...p }));
+  if (!list.length) throw new Error('v souboru nejsou žádné nákupy');
+  if (data.config && confirm('Převzít ze zálohy i cíl a kategorie?')) { S.cfg = { cil: num(data.config.cil) || S.cfg.cil, kat: data.config.kat || S.cfg.kat }; api.saveConfig(S.cfg); }
+  for (const raw of list) {
+    const id = raw.id || rid();
+    const p = { id, ...clean(raw) };
+    p.pol = (p.pol || []).map(i => ({ id: i.id || rid(), kat: i.kat || '', nazev: i.nazev || '', prov: i.prov || '', kod: i.kod || '', pocet: num(i.pocet), jed: i.jed || '', cena: num(i.cena), odkaz: i.odkaz || '', pozn: i.pozn || '', zrus: !!i.zrus }));
+    p.dok = (p.dok || []).map(d => ({ id: d.id || rid(), typ: d.typ || 'Faktura', cislo: d.cislo || '', datum: d.datum || '', castka: num(d.castka) }));
+    S.nak[id] = p; queueSave(id, true);
+  }
+  render(); toast(`Nahráno ${list.length} nákupů`);
+}
+window.__nakupyImport = importData;
+
+start();
+</script>
+</body>
+</html>
