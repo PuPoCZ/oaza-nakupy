@@ -727,6 +727,7 @@ function importData(data) {
 }
 window.__nakupyImport = importData;
 
+window.addEventListener('hashchange', () => { if (/[#&]k=/.test(location.hash)) location.reload(); });
 start();
 </script>
 </body>
