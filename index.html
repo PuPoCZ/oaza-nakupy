@@ -100,6 +100,11 @@ table.cats tbody tr { cursor: pointer; }
 table.cats tbody tr:hover td { background: var(--accent-soft); }
 table.cats tr.on td { background: var(--accent-soft); font-weight: 600; }
 table.cats tfoot td { font-weight: 600; border-bottom: 0; border-top: 1px solid var(--line); }
+table.cats tfoot tr { cursor: pointer; }
+table.cats tfoot tr:hover td, table.cats tfoot tr.on td { background: var(--accent-soft); }
+.cats-h { display: flex; align-items: baseline; gap: 10px; }
+.cats-h h2 { margin-bottom: 12px; }
+.showall { margin-left: auto; padding: 3px 10px; font-size: 13px; color: var(--accent); border-color: var(--accent); font-weight: 600; }
 table.cats th.r, table.cats td.r { text-align: right; }
 
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 22px 0 12px; }
@@ -109,7 +114,7 @@ table.cats th.r, table.cats td.r { text-align: right; }
 .seg button.on { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
 .toolbar input[type=search] { width: 260px; }
 .chip { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-soft); color: var(--accent); border-radius: 999px; padding: 3px 6px 3px 12px; font-weight: 600; font-size: 13px; }
-.chip button { border: 0; background: transparent; color: inherit; padding: 0 6px; }
+.chip button { border: 0; border-left: 1px solid currentColor; border-radius: 0; background: transparent; color: inherit; padding: 0 4px 0 10px; margin-left: 4px; font-weight: 600; }
 
 .group { margin-top: 18px; }
 .group-h { display: flex; align-items: baseline; gap: 10px; padding: 0 4px 8px; }
@@ -399,8 +404,8 @@ function renderCats(t) {
   let sp = 0, pl = 0;
   const rows = names.map(k => { const c = t.cats[k] || { sp: 0, plan: 0 }; sp += c.sp; pl += c.plan;
     return `<tr data-kat="${esc(k)}" class="${S.f.kat === k ? 'on' : ''}"><td>${esc(k)}</td><td class="r num">${kc(c.sp)}</td><td class="r num">${kc(c.plan)}</td><td class="r num c-all">${kc(c.sp + c.plan)}</td></tr>`; }).join('');
-  $('#cats').innerHTML = `<h2>Podle kategorií</h2><table class="cats"><thead><tr><th>Kategorie</th><th class="r">Utraceno</th><th class="r">V plánu</th><th class="r c-all">Celkem</th></tr></thead>
-    <tbody>${rows}</tbody><tfoot><tr><td>Celkem</td><td class="r num">${kc(sp)}</td><td class="r num">${kc(pl)}</td><td class="r num c-all">${kc(sp + pl)}</td></tr></tfoot></table>`;
+  $('#cats').innerHTML = `<div class="cats-h"><h2>Podle kategorií</h2>${S.f.kat ? '<button type="button" class="showall" data-kat="">Zobrazit vše</button>' : ''}</div><table class="cats"><thead><tr><th>Kategorie</th><th class="r">Utraceno</th><th class="r">V plánu</th><th class="r c-all">Celkem</th></tr></thead>
+    <tbody>${rows}</tbody><tfoot><tr data-kat="" class="${S.f.kat ? '' : 'on'}" title="Zobrazit všechny nákupy"><td>Celkem</td><td class="r num">${kc(sp)}</td><td class="r num">${kc(pl)}</td><td class="r num c-all">${kc(sp + pl)}</td></tr></tfoot></table>`;
 }
 const GROUPS = [
   ['run', 'Rozpracované', 'objednáno nebo zaplaceno, chybí faktura', p => ['obj', 'zap'].includes(stateOf(p))],
@@ -415,7 +420,7 @@ function matches(p) {
 }
 function renderList() {
   closePop();
-  $('#f-kat').innerHTML = S.f.kat ? `<span class="chip">${esc(S.f.kat)}<button type="button" data-clear-kat aria-label="Zrušit filtr kategorie">×</button></span>` : '';
+  $('#f-kat').innerHTML = S.f.kat ? `<span class="chip">Jen ${esc(S.f.kat)}<button type="button" data-clear-kat>× Zobrazit vše</button></span>` : '';
   const all = Object.values(S.nak).filter(matches);
   let html = '';
   for (const [key, title, hint, test] of GROUPS) {
@@ -673,7 +678,7 @@ function openPop(btn, p, k) {
 document.addEventListener('click', e => { if (!$('#pop').hidden && !e.target.closest('#pop') && !e.target.closest('[data-step]')) closePop(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closePop(); });
 
-$('#cats').addEventListener('click', e => { const tr = e.target.closest('tr[data-kat]'); if (!tr) return; S.f.kat = S.f.kat === tr.dataset.kat ? '' : tr.dataset.kat; render(); });
+$('#cats').addEventListener('click', e => { const el = e.target.closest('[data-kat]'); if (!el) return; const k = el.dataset.kat; S.f.kat = (!k || S.f.kat === k) ? '' : k; render(); });
 $('#f-stav').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; S.f.stav = b.dataset.v; [...$('#f-stav').children].forEach(x => x.classList.toggle('on', x === b)); renderList(); });
 $('#f-q').addEventListener('input', e => { S.f.q = e.target.value; renderList(); });
 $('#b-new').addEventListener('click', () => {
