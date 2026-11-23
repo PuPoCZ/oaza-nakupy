@@ -7,3 +7,4 @@ Přehled nákupů vybavení a útraty k cíli do konce roku. Každý nákup má 
 - Pravidla jsou v `firestore.rules` (obsahují i pravidla plánovače lůžek). Místo `KLIC` se v konzoli Firebase doplní skutečný klíč, do repozitáře se nepíše.
 - Zkušební režim bez databáze: `?demo` (data jen v prohlížeči).
 - Záloha a obnova: Nastavení → Stáhnout zálohu / Nahrát ze zálohy.
+- Správa z příkazové řádky bez prohlížeče: `tools/nakupy.py` (REST API Firestore, jen standardní knihovna Pythonu). Klíč v proměnné `NAKUPY_KLIC`. Příkazy: `souhrn`, `seznam`, `detail`, `export`, `uloz`, `stav`, `doklad`, `smaz`.
